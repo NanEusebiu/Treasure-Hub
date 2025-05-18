@@ -34,27 +34,25 @@ void start_monitor()
         return;
     }
 
-    if (pipe(monitor_pipe) == -1) // Creează pipe-ul
+    if (pipe(monitor_pipe) == -1)
     {
-        perror("Eroare la crearea pipe-ului");
+        perror("Eroare la creare pipe");
         exit(1);
     }
 
     monitor_pid = fork();
     if (monitor_pid == 0)
     {
-        // Procesul copil (monitor)
-        close(monitor_pipe[0]); // Închide capătul de citire al pipe-ului
-        dup2(monitor_pipe[1], STDOUT_FILENO); // Redirectează stdout către pipe
-        close(monitor_pipe[1]); // Închide capătul de scriere al pipe-ului
+        close(monitor_pipe[0]);
+        dup2(monitor_pipe[1], 1);
+        close(monitor_pipe[1]);
         execl("./monitor", "./monitor", NULL);
         perror("Eroare la execl");
         exit(-1);
     }
     else if (monitor_pid > 0)
     {
-        // Procesul părinte
-        close(monitor_pipe[1]); // Închide capătul de scriere al pipe-ului
+        close(monitor_pipe[1]);
         monitor_running = 1;
         monitor_terminated = 0;
         char msg[64];
@@ -69,12 +67,14 @@ void start_monitor()
 
 void read_from_monitor()
 {
-    char buffer[1024];
-    ssize_t bytes_read = read(monitor_pipe[0], buffer, sizeof(buffer) - 1);
-    if (bytes_read > 0)
+    void read_from_monitor()
     {
-        buffer[bytes_read] = '\0'; // Termină șirul
-        write(1, buffer, bytes_read); // Afișează rezultatele în terminal
+        char buffer[1024];
+        ssize_t bytes_read = read(monitor_pipe[0], buffer, sizeof(buffer));
+        if (bytes_read > 0)
+        {
+            write(1, buffer, bytes_read);
+        }
     }
 }
 
@@ -151,6 +151,7 @@ void view_treasure()
     strcat(cmd, " ");
     strcat(cmd, treasure_id);
     send_command(cmd, SIGUSR2);
+    read_from_monitor();
 }
 
 void sigchld_handler(int sig)
@@ -195,20 +196,39 @@ void calculate_score()
     {
         if (entry->d_type == DT_DIR && entry->d_name[0] != '.')
         {
+            int fd[2];
+            if (pipe(fd) == -1)
+            {
+                perror("pipe error");
+                continue;
+            }
+
             pid_t pid = fork();
             if (pid == 0)
             {
-                // Proces copil
+                close(fd[0]);
+                dup2(fd[1], 1);
+                close(fd[1]);
                 execl("./calculate_score", "./calculate_score", entry->d_name, NULL);
-                perror("Error executing calculate_scores");
+                perror("Error executing calculate_score");
                 exit(1);
+            }
+            else if (pid > 0)
+            {
+                
+                close(fd[1]);
+                char buffer[1024];
+                ssize_t bytes_read;
+                while ((bytes_read = read(fd[0], buffer, sizeof(buffer))) > 0)
+                {
+                    write(1, buffer, bytes_read);
+                }
+                close(fd[0]);
+                waitpid(pid, NULL, 0);
             }
         }
     }
     closedir(dir);
-
-    // Așteaptă toate procesele copil
-    while (wait(NULL) > 0);
 }
 
 int main()
@@ -301,7 +321,7 @@ int main()
                                 }
                             }    
                             else
-                                if(strcmp(buffer,"--caculate_score") == 0)
+                                if(strcmp(buffer,"--calculate_score") == 0)
                                 {
                                     write(0, "Calculeaza scorul\n", 19);
                                     if (!monitor_running)
