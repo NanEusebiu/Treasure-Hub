@@ -37,7 +37,7 @@ void handle_list_hunts()
             strcpy(msg, "Hunt: ");
             strcat(msg, entry->d_name);
             strcat(msg, "\n");
-            write(1, msg, strlen(msg)); // Scrie în stdout (redirectat către pipe)
+            write(0, msg, strlen(msg));
         }
     }
     closedir(dir);
@@ -66,9 +66,33 @@ void handle_list_treasures(const char *hunt_id)
     Treasure treasure;
     while (read(fd, &treasure, sizeof(Treasure)) == sizeof(Treasure))
     {
-        printf("ID: %d, Username: %s, Latitude: %.2f, Longitude: %.2f, Clue: %s, Value: %d\n",
-               treasure.id, treasure.username, treasure.latitude, treasure.longitude,
-               treasure.clue, treasure.value);
+        char msg[2048], temp[128];
+
+        strcpy(msg, "ID: ");
+        int len = sprintf(temp, "%d", treasure.id);
+        strcat(msg, temp);
+
+        strcat(msg, ", Username: ");
+        strcat(msg, treasure.username);
+
+        strcat(msg, ", Latitude: ");
+        len = sprintf(temp, "%.2f", treasure.latitude);
+        strcat(msg, temp);
+
+        strcat(msg, ", Longitude: ");
+        len = sprintf(temp, "%.2f", treasure.longitude);
+        strcat(msg, temp);
+
+        strcat(msg, ", Clue: ");
+        strcat(msg, treasure.clue);
+
+        strcat(msg, ", Value: ");
+        len = sprintf(temp, "%d", treasure.value);
+        strcat(msg, temp);
+
+        strcat(msg, "\n");
+
+        write(0, msg, strlen(msg));
     }
     close(fd);
 }
@@ -101,9 +125,33 @@ void handle_view_treasure(const char *hunt_id, const char *treasure_id)
     {
         if (treasure.id == id)
         {
-            printf("ID: %d\nUsername: %s\nLatitude: %.2f\nLongitude: %.2f\nClue: %s\nValue: %d\n",
-                   treasure.id, treasure.username, treasure.latitude, treasure.longitude,
-                   treasure.clue, treasure.value);
+            char msg[2048], temp[128];
+
+            strcpy(msg, "ID: ");
+            int len = sprintf(temp, "%d", treasure.id);
+            strcat(msg, temp);
+
+            strcat(msg, "\nUsername: ");
+            strcat(msg, treasure.username);
+
+            strcat(msg, "\nLatitude: ");
+            len = sprintf(temp, "%.2f", treasure.latitude);
+            strcat(msg, temp);
+
+            strcat(msg, "\nLongitude: ");
+            len = sprintf(temp, "%.2f", treasure.longitude);
+            strcat(msg, temp);
+
+            strcat(msg, "\nClue: ");
+            strcat(msg, treasure.clue);
+
+            strcat(msg, "\nValue: ");
+            len = sprintf(temp, "%d", treasure.value);
+            strcat(msg, temp);
+
+            strcat(msg, "\n");
+            
+            write(0, msg, strlen(msg));
             close(fd);
             return;
         }
@@ -176,7 +224,7 @@ void handle_signal(int sig)
                         if (token != NULL)
                         {
                             strncpy(treasure_id, token, sizeof(treasure_id) - 1);
-                            treasure_id[sizeof(treasure_id) - 1] = '\0'; // Asigură terminarea corectă a șirului
+                            treasure_id[sizeof(treasure_id) - 1] = '\0';
                         }
                         else
                         {
