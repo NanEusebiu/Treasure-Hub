@@ -193,9 +193,21 @@ void list(const char *hunt_id)
         exit(-1);
     }
 
-    printf("Nume: %s\n", hunt_id);
-    printf("Size: %ld\n", file_stat.st_size);
-    printf("Ultima modificare: %s", ctime(&file_stat.st_mtime));
+    char msg[512], temp[128];
+
+    strcpy(msg, "Nume: ");
+    strcat(msg, hunt_id);
+    strcat(msg, "\n");
+
+    strcat(msg, "Size: ");
+    sprintf(temp, "%ld", file_stat.st_size);
+    strcat(msg, temp);
+    strcat(msg, "\n");
+
+    strcat(msg, "Ultima modificare: ");
+    strcat(msg, ctime(&file_stat.st_mtime));
+    
+    write(1, msg, strlen(msg));
 
     
     int fd = open(file_path, O_RDONLY);
@@ -208,7 +220,33 @@ void list(const char *hunt_id)
     Treasure treasure;
     while(read(fd, &treasure, sizeof(Treasure)) == sizeof(Treasure)) 
     {
-        printf("%d  %s  %.2f  %.2f  %d  %s\n", treasure.id, treasure.username, treasure.latitude, treasure.longitude, treasure.value, treasure.clue);     
+        char msg[2048], temp[128];
+
+        strcpy(msg, "ID: ");
+        int len = sprintf(temp, "%d", treasure.id);
+        strcat(msg, temp);
+
+        strcat(msg, "\nUsername: ");
+        strcat(msg, treasure.username);
+
+        strcat(msg, "\nLatitude: ");
+        len = sprintf(temp, "%.2f", treasure.latitude);
+        strcat(msg, temp);
+
+        strcat(msg, "\nLongitude: ");
+        len = sprintf(temp, "%.2f", treasure.longitude);
+        strcat(msg, temp);
+
+        strcat(msg, "\nClue: ");
+        strcat(msg, treasure.clue);
+
+        strcat(msg, "\nValue: ");
+        len = sprintf(temp, "%d", treasure.value);
+        strcat(msg, temp);
+
+        strcat(msg, "\n");
+            
+        write(1, msg, strlen(msg));    
     }
     close(fd);
 
@@ -260,12 +298,32 @@ void view(const char *hunt_id, int id)
     {
         if (treasure.id == id)
         {
-            printf("id: %d \n", id);
-            printf("username: %s\n", treasure.username);
-            printf("latitude: %.2f\n", treasure.latitude);
-            printf("longitude: %.2f\n", treasure.longitude);
-            printf("clue: %s\n", treasure.clue);
-            printf("value: %d\n", treasure.value);
+            char msg[2048], temp[128];
+            strcpy(msg, "ID: ");
+            int len = sprintf(temp, "%d", treasure.id);
+            strcat(msg, temp);
+       
+            strcat(msg, "\nUsername: ");
+            strcat(msg, treasure.username);
+
+            strcat(msg, "\nLatitude: ");
+            len = sprintf(temp, "%.2f", treasure.latitude);
+            strcat(msg, temp);
+
+            strcat(msg, "\nLongitude: ");
+            len = sprintf(temp, "%.2f", treasure.longitude);
+            strcat(msg, temp);
+
+            strcat(msg, "\nClue: ");
+            strcat(msg, treasure.clue);
+
+            strcat(msg, "\nValue: ");
+            len = sprintf(temp, "%d", treasure.value);
+            strcat(msg, temp);
+
+            strcat(msg, "\n");
+            
+            write(1, msg, strlen(msg));          
 
             logg(hunt_id, "Vazuta\n");
             close(fd);
