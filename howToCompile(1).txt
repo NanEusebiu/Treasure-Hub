@@ -1,0 +1,22 @@
+##Pt programul treasure_manager.c
+gcc treasure_manager.c -o treasure_manager
+
+./treasure_manager --add numeHuntNou
+./treasure_manager --list HuntExistent
+./treasure_manager --view HuntExistent TreasureExistent
+./treasure_manager --remove_treasure HuntExistent TreasureExistent
+./treasure_manager --remove_hunt HuntExistent
+
+##Pt treasure_hub
+gcc treasure_hub.c -o treasure_hub
+gcc monitor.c -o monitor
+gcc calculate_score.c -o calculate_score
+./treasure_hub
+##acum putem apela oricare dintre urmatoarele instructiuni
+--start_monitor
+--list_hunts
+--list_treasures
+--view_treasure
+--calculate_score
+--stop_monitor
+--exit
